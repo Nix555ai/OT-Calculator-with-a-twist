@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compensation Calculator</title>
+    <!-- Include React -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Include Tailwind CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .calculator {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+        .results {
+            background-color: #f8fafc;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function Calculator() {
+            const [targetAnnual, setTargetAnnual] = React.useState(100000);
+            const [overtimeHours, setOvertimeHours] = React.useState(0);
+            const [calculations, setCalculations] = React.useState({
+                adjustedBaseSalary: 0,
+                baseHourlyRate: 0,
+                overtimeRate: 0,
+                weeklyOvertimePay: 0,
+                annualOvertimePay: 0,
+                effectiveHourlyRate: 0
+            });
+
+            React.useEffect(() => {
+                const annualOvertimeHours = overtimeHours * 52;
+                const standardHours = 2080;
+                const totalHours = standardHours + annualOvertimeHours;
+                const overtimeMultiplier = (1.5 * annualOvertimeHours) / standardHours;
+                const adjustedBaseSalary = targetAnnual / (1 + overtimeMultiplier);
+                const baseHourlyRate = adjustedBaseSalary / standardHours;
+                const overtimeRate = baseHourlyRate * 1.5;
+                const weeklyOvertimePay = overtimeRate * overtimeHours;
+                const annualOvertimePay = weeklyOvertimePay * 52;
+                const effectiveHourlyRate = targetAnnual / totalHours;
+
+                setCalculations({
+                    adjustedBaseSalary,
+                    baseHourlyRate,
+                    overtimeRate,
+                    weeklyOvertimePay,
+                    annualOvertimePay,
+                    effectiveHourlyRate
+                });
+            }, [targetAnnual, overtimeHours]);
+
+            const formatCurrency = (value) => {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(value);
+            };
+
+            return (
+                <div className="calculator">
+                    <h1 className="text-2xl font-bold mb-6">Compensation Calculator</h1>
+                    
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Target Total Annual Compensation
+                            <input
+                                type="number"
+                                value={targetAnnual}
+                                onChange={(e) => setTargetAnnual(Number(e.target.value))}
+                                min="0"
+                                className="mt-1"
+                            />
+                        </label>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Weekly Overtime Hours
+                            <input
+                                type="number"
+                                value={overtimeHours}
+                                onChange={(e) => setOvertimeHours(Number(e.target.value))}
+                                min="0"
+                                max="168"
+                                className="mt-1"
+                            />
+                        </label>
+                    </div>
+
+                    <div className="results">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="text-sm text-gray-600">Adjusted Base Salary:</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.adjustedBaseSalary)}
+                            </div>
+                            
+                            <div className="text-sm text-gray-600">Base Hourly Rate:</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.baseHourlyRate)}
+                            </div>
+                            
+                            <div className="text-sm text-gray-600">Overtime Rate (1.5x):</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.overtimeRate)}
+                            </div>
+                            
+                            <div className="text-sm text-gray-600">Weekly Overtime Pay:</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.weeklyOvertimePay)}
+                            </div>
+                            
+                            <div className="text-sm text-gray-600">Annual Overtime Pay:</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.annualOvertimePay)}
+                            </div>
+                            
+                            <div className="text-sm text-gray-600">Effective Hourly Rate:</div>
+                            <div className="text-right font-medium">
+                                {formatCurrency(calculations.effectiveHourlyRate)}
+                            </div>
+                        </div>
+                        
+                        <div className="mt-4 text-sm text-green-600">
+                            Total Annual: {formatCurrency(calculations.adjustedBaseSalary + calculations.annualOvertimePay)}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<Calculator />, document.getElementById('root'));
+    </script>
+    <!-- Include Babel for JSX transformation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+</body>
+</html>
